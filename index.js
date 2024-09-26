@@ -21,8 +21,8 @@ app.use(cors());  // Enable CORS for all routes
 app.use('/api/auth', authRoutes);
 
 // Path to the text file "database"
-const dbFilePath = path.join(__dirname, 'db', 'database.txt');
-const USERS_FILE = path.join(__dirname, '../db/users.txt');
+const dbFilePath = path.join(__dirname, '../db/database.txt');
+const USERS_FILE = path.join(__dirname, '../db/users.txt'); 
 const SALT_ROUNDS = 10;
 
 // GET route to read from the text file
