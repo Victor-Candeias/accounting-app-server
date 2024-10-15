@@ -14,6 +14,8 @@ const ENCRYPTION_KEY = crypto
   .substring(0, 32);
 const IV_LENGTH = 16;
 const SALT_ROUNDS = 10;
+const complexityRules =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
 // Setup winston logger to log messages to a file
 const logger = winston.createLogger({
@@ -127,6 +129,10 @@ function decrypt(text) {
   return decrypted;
 }
 
+function validatePasswordRules(password) {
+  return complexityRules.test(password);
+}
+
 module.exports = {
   createToken,
   verifyToken,
@@ -135,4 +141,5 @@ module.exports = {
   SALT_ROUNDS,
   logger,
   GetEncryptionKey,
+  validatePasswordRules,
 };

@@ -21,6 +21,12 @@ router.post("/register", async (req, res) => {
         .json({ message: "Username and password are required." });
     }
 
+    if (!utils.validatePasswordRules(password)) {
+      return res
+        .status(400)
+        .json("Password does not meet complexity requirements.");
+    }
+
     // Check if the user already exists
     const userExists = await Database.getUser({ name: username });
 
@@ -40,7 +46,7 @@ router.post("/register", async (req, res) => {
     // Save user to the database
     const newUser = await Database.addUser(userModel); // Ensure this is awaited
 
-    res
+    return res
       .status(201)
       .json({ message: "User registered successfully.", user: newUser });
   } catch (error) {
