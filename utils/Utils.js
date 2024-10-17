@@ -5,81 +5,85 @@ const path = require("path");
 require("dotenv").config();
 
 /**
- * AES block size
+ * The encryption key used for AES encryption, derived from an environment variable.
+ * @constant {string}
  */
 const ENCRYPTION_KEY = crypto
   .createHash("sha256")
   .update(process.env.ENCRYPTION_KEY)
   .digest("base64")
   .substring(0, 32);
+
+/**
+ * The initialization vector (IV) length for AES encryption.
+ * @constant {number}
+ */
 const IV_LENGTH = 16;
+
+/**
+ * The number of rounds used for salting in bcrypt password hashing.
+ * @constant {number}
+ */
 const SALT_ROUNDS = 10;
+
+/**
+ * Regex pattern for password complexity requirements.
+ * - Must contain at least one lowercase letter, one uppercase letter, one digit, and one special character.
+ * - Minimum length of 8 characters.
+ * @constant {RegExp}
+ */
 const complexityRules =
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
-// Setup winston logger to log messages to a file
+/**
+ * Winston logger setup for logging messages to a file and console (in development mode).
+ */
 const logger = winston.createLogger({
-  level: "info", // Set the log level (e.g., info, error, debug)
+  level: "info", // Logging level (info, error, debug)
   format: winston.format.combine(
-    winston.format.timestamp(), // Adds a timestamp to each log
-    winston.format.json() // Logs the output in JSON format
+    winston.format.timestamp(), // Adds timestamps to logs
+    winston.format.json() // Logs messages in JSON format
   ),
   transports: [
-    // Logs to a file named `app.log`
+    // Logs messages to a file called `app.log`
     new winston.transports.File({ filename: "logs/app.log" }),
 
-    // Step 2: Conditionally log to the console in development mode
+    // Conditionally log to the console in development mode
     new winston.transports.Console({
       format: winston.format.combine(
-        winston.format.colorize(), // Adds color to console logs
-        winston.format.simple() // Simplifies the console output
+        winston.format.colorize(), // Colorized logs for the console
+        winston.format.simple() // Simplified console output
       ),
     }),
   ],
 });
 
 /**
- * Encryption key (32 bytes for AES-256)
+ * Creates a JWT token for the specified user.
+ * @param {Object} user - The user object for whom the token is generated.
+ * @param {string} user.id - The ID of the user.
+ * @param {string} user.name - The username of the user.
+ * @param {string} user.role - The role of the user.
+ * @returns {string} - The generated JWT token.
  */
-function GetEncryptionKey() {
-  // Key and IV must have valid lengths
-  const key = crypto
-    .createHash("sha256")
-    .update(process.env.SECRET_KEY)
-    .digest(); // Creates a 32-byte key
-  const iv = Buffer.alloc(16, 0); // Example IV of 16 bytes, update this as needed
-
-  // Decrypt function using aes-256-cbc
-  const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv);
-
-  // Example encrypted data (update with your own)
-  let encrypted = "your-encrypted-data-here";
-
-  // Decrypting data
-  let decrypted = decipher.update(encrypted, "hex", "utf-8");
-  decrypted += decipher.final("utf-8");
-
-  console.log("Decrypted:", decrypted);
-
-  return decrypted;
-}
-
 function createToken(user) {
-  // Payload: data to be included in the token
   const payload = {
     id: user.id,
     username: user.name,
     role: user.role,
   };
 
-  // Sign the token with the secret key and set an expiration time
-  const token = jwt.sign(payload, process.env.ENCRYPTION_KEY, {
-    expiresIn: "1h",
-  }); // Token expires in 1 hour
-
-  return token;
+  return jwt.sign(payload, process.env.ENCRYPTION_KEY, {
+    expiresIn: "1h", // Token expires in 1 hour
+  });
 }
 
+/**
+ * Middleware to verify the JWT token in the request headers.
+ * @param {Object} req - The HTTP request object.
+ * @param {Object} res - The HTTP response object.
+ * @param {Function} next - The next middleware function.
+ */
 function verifyToken(req, res, next) {
   const token = req.headers["authorization"]?.split(" ")[1];
 
@@ -92,12 +96,16 @@ function verifyToken(req, res, next) {
       return res.status(401).send("Invalid token");
     }
 
-    req.user = user; // Store user info for use in the request
+    req.user = user; // Attach the user to the request object
     next();
   });
 }
 
-// Encrypt the data
+/**
+ * Encrypts a given text using AES-256-CBC encryption.
+ * @param {string} text - The plaintext to be encrypted.
+ * @returns {string} - The encrypted text in the format `iv:encryptedData`.
+ */
 function encrypt(text) {
   const iv = crypto.randomBytes(IV_LENGTH);
   const cipher = crypto.createCipheriv(
@@ -110,7 +118,11 @@ function encrypt(text) {
   return iv.toString("hex") + ":" + encrypted;
 }
 
-// Decrypt the data
+/**
+ * Decrypts a given encrypted text using AES-256-CBC decryption.
+ * @param {string} text - The encrypted text in the format `iv:encryptedData`.
+ * @returns {string} - The decrypted plaintext.
+ */
 function decrypt(text) {
   if (!text) {
     return "";
@@ -129,6 +141,11 @@ function decrypt(text) {
   return decrypted;
 }
 
+/**
+ * Validates a password based on complexity rules.
+ * @param {string} password - The password to be validated.
+ * @returns {boolean} - Returns `true` if the password passes the complexity rules, otherwise `false`.
+ */
 function validatePasswordRules(password) {
   return complexityRules.test(password);
 }
@@ -140,6 +157,5 @@ module.exports = {
   decrypt,
   SALT_ROUNDS,
   logger,
-  GetEncryptionKey,
   validatePasswordRules,
 };

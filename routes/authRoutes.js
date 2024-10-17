@@ -10,6 +10,57 @@ require("dotenv").config();
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * /register:
+ *   post:
+ *     summary: Register a new user
+ *     description: This endpoint allows new users to register by providing a username and a password. It validates the input and hashes the password before saving it to the database.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 description: The username of the new user.
+ *               password:
+ *                 type: string
+ *                 description: The password of the new user.
+ *     responses:
+ *       201:
+ *         description: User registered successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User registered successfully.
+ *                 user:
+ *                   type: object
+ *                   description: The newly created user object.
+ *       400:
+ *         description: Bad Request. Username or password is missing, or user already exists.
+ *       500:
+ *         description: Internal Server Error.
+ */
+/**
+ * POST /register
+ * Registers a new user.
+ * 
+ * Request body:
+ * - username: The username of the new user (string).
+ * - password: The password of the new user (string).
+ * 
+ * Responses:
+ * - 201: User registered successfully, returns a message and user details.
+ * - 400: Bad Request if username or password is missing or user already exists.
+ * - 500: Internal Server Error.
+ */
 router.post("/register", async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -55,6 +106,54 @@ router.post("/register", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /login:
+ *   post:
+ *     summary: Login an existing user
+ *     description: This endpoint allows users to log in by providing their username and password. It validates the credentials and returns a JWT token if successful.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 description: The username of the user logging in.
+ *               password:
+ *                 type: string
+ *                 description: The password of the user logging in.
+ *     responses:
+ *       200:
+ *         description: Successful login, returns a JWT token.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                   description: The JWT token for the logged-in user.
+ *       400:
+ *         description: Bad Request. User not found or incorrect password.
+ *       500:
+ *         description: Internal Server Error.
+ */
+/**
+ * POST /login
+ * Logs in an existing user.
+ * 
+ * Request body:
+ * - username: The username of the user logging in (string).
+ * - password: The password of the user logging in (string).
+ * 
+ * Responses:
+ * - 200: Successful login, returns a JWT token.
+ * - 400: Bad Request if user not found or incorrect password.
+ * - 500: Internal Server Error.
+ */
 router.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
